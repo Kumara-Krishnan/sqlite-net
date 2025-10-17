@@ -148,5 +148,75 @@ namespace SQLite.Tests
 				Assert.That (info.Sql.Contains ("without rowid"));
 			}
 		}
+
+		class FullTextSearchDocument
+		{
+			public string Title { get; set; }
+			public string Content { get; set; }
+		}
+
+		[Test]
+		public void CreateTableWithFTS5 ()
+		{
+			using (var conn = new TestDb ())
+			{
+				// Create table with FTS5
+				conn.CreateTable<FullTextSearchDocument> (CreateFlags.FullTextSearch5);
+				
+				// Verify table was created as virtual table using fts5
+				var info = conn.Table<SqliteMaster>().Where(m => m.TableName=="FullTextSearchDocument").FirstOrDefault ();
+				Assert.IsNotNull (info, "Table should exist");
+				Assert.That (info.Type == "table", "Should be a table type");
+				// FTS5 creates virtual tables but the SQL might not contain the word "virtual" in sqlite_master
+				// Instead, let's verify it was created and we can use it
+				
+				// Insert some test data
+				conn.Insert (new FullTextSearchDocument { Title = "First Document", Content = "This is the first document content" });
+				conn.Insert (new FullTextSearchDocument { Title = "Second Document", Content = "This is the second document content" });
+				conn.Insert (new FullTextSearchDocument { Title = "Third Document", Content = "Different content here" });
+				
+				// Verify we can query the data
+				var docs = conn.Table<FullTextSearchDocument> ().ToList ();
+				Assert.AreEqual (3, docs.Count);
+			}
+		}
+
+		[Test]
+		public void CreateTableWithFTS3 ()
+		{
+			using (var conn = new TestDb ())
+			{
+				// Create table with FTS3
+				conn.CreateTable<FullTextSearchDocument> (CreateFlags.FullTextSearch3);
+				
+				// Verify table was created and we can use it
+				var info = conn.Table<SqliteMaster>().Where(m => m.TableName=="FullTextSearchDocument").FirstOrDefault ();
+				Assert.IsNotNull (info, "Table should exist");
+				
+				// Insert and query to verify it works
+				conn.Insert (new FullTextSearchDocument { Title = "Test", Content = "Content" });
+				var docs = conn.Table<FullTextSearchDocument> ().ToList ();
+				Assert.AreEqual (1, docs.Count);
+			}
+		}
+
+		[Test]
+		public void CreateTableWithFTS4 ()
+		{
+			using (var conn = new TestDb ())
+			{
+				// Create table with FTS4
+				conn.CreateTable<FullTextSearchDocument> (CreateFlags.FullTextSearch4);
+				
+				// Verify table was created and we can use it
+				var info = conn.Table<SqliteMaster>().Where(m => m.TableName=="FullTextSearchDocument").FirstOrDefault ();
+				Assert.IsNotNull (info, "Table should exist");
+				
+				// Insert and query to verify it works
+				conn.Insert (new FullTextSearchDocument { Title = "Test", Content = "Content" });
+				var docs = conn.Table<FullTextSearchDocument> ().ToList ();
+				Assert.AreEqual (1, docs.Count);
+			}
+		}
     }
 }

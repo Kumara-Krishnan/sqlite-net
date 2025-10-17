@@ -163,7 +163,11 @@ namespace SQLite
 		/// <summary>
 		/// Create virtual table using FTS4
 		/// </summary>
-		FullTextSearch4 = 0x200
+		FullTextSearch4 = 0x200,
+		/// <summary>
+		/// Create virtual table using FTS5
+		/// </summary>
+		FullTextSearch5 = 0x400
 	}
 
 	public interface ISQLiteConnection : IDisposable
@@ -889,15 +893,27 @@ namespace SQLite
 				// Facilitate virtual tables a.k.a. full-text search.
 				bool fts3 = (createFlags & CreateFlags.FullTextSearch3) != 0;
 				bool fts4 = (createFlags & CreateFlags.FullTextSearch4) != 0;
-				bool fts = fts3 || fts4;
+				bool fts5 = (createFlags & CreateFlags.FullTextSearch5) != 0;
+				bool fts = fts3 || fts4 || fts5;
 				var @virtual = fts ? "virtual " : string.Empty;
-				var @using = fts3 ? "using fts3 " : fts4 ? "using fts4 " : string.Empty;
+				var @using = fts3 ? "using fts3 " : fts4 ? "using fts4 " : fts5 ? "using fts5 " : string.Empty;
 
 				// Build query.
 				var query = "create " + @virtual + "table if not exists \"" + map.TableName + "\" " + @using + "(\n";
-				var decls = map.Columns.Select (p => Orm.SqlDecl (p, StoreDateTimeAsTicks, StoreTimeSpanAsTicks));
-				var decl = string.Join (",\n", decls.ToArray ());
-				query += decl;
+				
+				// FTS tables don't support type declarations, constraints, etc.
+				// They only need column names
+				if (fts) {
+					var columnNames = map.Columns.Select (p => "\"" + p.Name + "\"");
+					var decl = string.Join (",\n", columnNames.ToArray ());
+					query += decl;
+				}
+				else {
+					var decls = map.Columns.Select (p => Orm.SqlDecl (p, StoreDateTimeAsTicks, StoreTimeSpanAsTicks));
+					var decl = string.Join (",\n", decls.ToArray ());
+					query += decl;
+				}
+				
 				query += ")";
 				if (map.WithoutRowId) {
 					query += " without rowid";
