@@ -1,7 +1,7 @@
 
 # SQLite-net
 
-[[GitHub Action](https://github.com/praeclarum/sqlite-net/actions)] [[Code Coverage Report](https://praeclarum.org/sqlite-net/coverage/)]
+[![Build and Test](https://github.com/Kumara-Krishnan/sqlite-net/actions/workflows/build.yml/badge.svg)](https://github.com/Kumara-Krishnan/sqlite-net/actions/workflows/build.yml) [[GitHub Action](https://github.com/praeclarum/sqlite-net/actions)] [[Code Coverage Report](https://praeclarum.org/sqlite-net/coverage/)]
 
 Use one of these packages:
 
